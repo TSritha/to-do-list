@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple To-Do List</title>
+    <link rel="stylesheet" href="style.css">
+     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div id="todo-container">
+        <h2>To-Do List</h2>
+        <ul id="todo-list"></ul>
+        <div id="add-task">
+            <input type="text" id="task-input" placeholder="Add a new task">
+            <button id="add-button"><i class="fa-solid fa-plus" id="add-button-i"></i> Add</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const todoList = document.getElementById("todo-list");
+            const taskInput = document.getElementById("task-input");
+            const addButton = document.getElementById("add-button");
+
+            // Load tasks from local storage
+            loadTasks();
+
+            addButton.addEventListener("click", function () {
+                const taskText = taskInput.value.trim();
+
+                if (taskText !== "") {
+                    const listItem = createTaskElement(taskText);
+
+                    todoList.appendChild(listItem);
+                    taskInput.value = "";
+
+                    // Save tasks to local storage
+                    saveTasks();
+                }
+            });
+
+               todoList.addEventListener("click", function (event) {
+                const target = event.target;
+
+                if (target.tagName === "SPAN") {
+                    const listItem = target.parentNode;
+                    listItem.contentEditable = true;
+                    listItem.focus();
+                } else if (target.tagName === "INPUT" && target.type === "checkbox") {
+                    const listItem = target.parentNode;
+                    listItem.classList.toggle("checked");
+
+                    // Save tasks to local storage after marking as checked
+                    saveTasks();
+                }
+            });
+
+            todoList.addEventListener("blur", function (event) {
+                const target = event.target;
+
+                if (target.tagName === "SPAN") {
+                    const listItem = target.parentNode;
+                    listItem.contentEditable = false;
+
+                    // Save tasks to local storage after editing
+                    saveTasks();
+                }
+            });
+        });
+
+        function createTaskElement(taskText) {
+            const listItem = document.createElement("li");
+            listItem.className = "todo-item";
+            listItem.innerHTML = `
+                <input type="checkbox">
+                <span>${taskText}</span>
+                <i class="fa-solid fa-xmark" id="remove" onclick="removeTask(this)"></i>
+            `;
+
+            return listItem;
+        }
+
+        function removeTask(button) {
+            const listItem = button.parentNode;
+            const todoList = listItem.parentNode;
+            todoList.removeChild(listItem);
+
+            // Save tasks to local storage after removal
+            saveTasks();
+        }
+
+        function saveTasks() {
+            const todoList = document.getElementById("todo-list");
+            const tasks = [];
+
+            for (const listItem of todoList.children) {
+                const taskText = listItem.querySelector("span").innerText;
+                const isChecked = listItem.classList.contains("checked");
+                tasks.push({text:taskText,checked:isChecked});
+            }
+
+            localStorage.setItem("tasks", JSON.stringify(tasks));
+        }
+
+        function loadTasks() {
+            const todoList = document.getElementById("todo-list");
+            const storedTasks = localStorage.getItem("tasks");
+
+            if (storedTasks) {
+                const tasks = JSON.parse(storedTasks);
+
+                for (const {text,checked}of tasks) {
+                    const listItem = createTaskElement(text,checked);
+                    
+                    if (checked) {
+                        listItem.classList.add("checked");
+                    }
+                    todoList.appendChild(listItem);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
